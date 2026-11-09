@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>科学素养机考练习</title>
+<style>
+:root{--ink:#1f2329;--mid:#5a6474;--line:#e3e6ec;--bg:#f5f7fa;--card:#fff;--accent:#1668dc;--ok:#12a150;--bad:#e5484d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:560px;margin:0 auto;padding:16px 16px 40px}
+header{display:flex;align-items:center;gap:10px;margin:6px 0 18px}
+header .logo{width:38px;height:38px;border-radius:10px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px}
+header h1{font-size:17px;margin:0;line-height:1.25}
+header p{font-size:12px;color:var(--mid);margin:2px 0 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.btn{display:block;width:100%;border:0;border-radius:12px;padding:14px;font-size:16px;font-weight:600;background:var(--accent);color:#fff;cursor:pointer;font-family:inherit}
+.btn:disabled{opacity:.45}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:10px;font-size:14px;border-radius:10px}
+input[type=text]{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:16px;font-family:inherit;background:#fff}
+.mods{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mod{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff;cursor:pointer;transition:.15s}
+.mod:active{transform:scale(.985)}
+.mod .n{font-weight:600;font-size:15px}
+.mod .d{font-size:12px;color:var(--mid);margin-top:3px}
+.bar{height:6px;background:#e9edf3;border-radius:99px;overflow:hidden;margin-bottom:14px}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:.25s}
+.top{display:flex;justify-content:space-between;font-size:13px;color:var(--mid);margin-bottom:10px}
+.qhead{font-size:13px;color:var(--mid);margin-bottom:8px}
+.qtext{font-size:17px;font-weight:600;line-height:1.5;margin:4px 0 14px}
+.matrix{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:320px;margin:0 auto 6px}
+.mcell{aspect-ratio:1;border:1px solid var(--line);border-radius:8px;background:#fcfdff;display:grid;place-items:center}
+.mcell.empty{border-style:dashed;background:#f7f9fc;color:#9aa4b2;font-size:22px;font-weight:700}
+.mcell svg{width:88%;height:88%}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.opt{border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px;display:flex;align-items:center;gap:8px;cursor:pointer;font-family:inherit;font-size:15px;text-align:left;min-height:56px;color:inherit}
+.opt .k{flex:0 0 20px;height:20px;border-radius:50%;background:#eef2f8;color:var(--mid);font-size:12px;display:grid;place-items:center;font-weight:700}
+.opt svg{width:56px;height:56px;flex:0 0 auto}
+.opt.sel{border-color:var(--accent)}
+.opt.right{border-color:var(--ok);background:#f0fbf4}
+.opt.wrong{border-color:var(--bad);background:#fff5f5}
+.opt .k.right{background:var(--ok);color:#fff}
+.opt .k.wrong{background:var(--bad);color:#fff}
+.gridshow{display:grid;gap:5px;margin:6px auto;max-width:260px}
+.gcell{aspect-ratio:1;border-radius:6px;background:#eef2f8}
+.gcell.lit{background:var(--accent)}
+.msg{margin-top:12px;font-size:14px;border-radius:10px;padding:10px 12px;display:none}
+.msg.show{display:block}
+.msg.ok{background:#f0fbf4;color:#0c7a3d}
+.msg.bad{background:#fff5f5;color:#b42318}
+.big{font-size:32px;font-weight:700;text-align:center;margin:8px 0}
+.sub{text-align:center;color:var(--mid);font-size:13px}
+table.stat{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+table.stat td{padding:7px 0;border-bottom:1px solid var(--line)}
+table.stat td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.wrongitem{border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:8px;font-size:14px}
+.wrongitem .tag{font-size:12px;color:var(--mid)}
+footer{text-align:center;color:#9aa4b2;font-size:12px;margin-top:22px;line-height:1.6}
+.hide{display:none!important}
+.flashcount{font-size:44px;font-weight:700;text-align:center;color:var(--accent);margin:24px 0}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+"use strict";
+/* ========= 基础工具 ========= */
+const $ = (s)=>document.querySelector(s);
+const rnd = n => Math.floor(Math.random()*n);
+const pick = a => a[rnd(a.length)];
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]];} return a; };
+const LETTER = "ABCD";
+const INK="#243b53";
+
+/* ========= 图形绘制 ========= */
+function shapeSVG(shape, o){
+  o = o || {};
+  const cx = o.cx==null?50:o.cx, cy = o.cy==null?50:o.cy, r = o.r||26, fill=o.fill||"solid", rot=o.rot||0;
+  const st = 'fill="'+(fill==="solid"?INK:"none")+'" stroke="'+INK+'" stroke-width="3.2" stroke-linejoin="round"';
+  let body="";
+  switch(shape){
+    case "circle": body='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" '+st+'/>'; break;
+    case "square": body='<rect x="'+(cx-r)+'" y="'+(cy-r)+'" width="'+(2*r)+'" height="'+(2*r)+'" rx="2" '+st+'/>'; break;
+    case "triangle": body='<polygon points="'+cx+','+(cy-r)+' '+(cx+r*0.9)+','+(cy+r*0.62)+' '+(cx-r*0.9)+','+(cy+r*0.62)+'" '+st+'/>'; break;
+    case "diamond": body='<polygon points="'+cx+','+(cy-r)+' '+(cx+r)+','+cy+' '+cx+','+(cy+r)+' '+(cx-r)+','+cy+'" '+st+'/>'; break;
+    case "star": {
+      let p=[];
+      for(let i=0;i<10;i++){ const ang=-Math.PI/2+i*Math.PI/5, rr=i%2?r*0.45:r; p.push((cx+rr*Math.cos(ang)).toFixed(1)+","+(cy+rr*Math.sin(ang)).toFixed(1)); }
+      body='<polygon points="'+p.join(" ")+'" '+st+'/>'; break;
+    }
+    case "line": body='<line x1="'+cx+'" y1="'+(cy-r)+'" x2="'+cx+'" y2="'+(cy+r)+'" stroke="'+INK+'" stroke-width="4" transform="rotate('+rot+' '+cx+' '+cy+')"/>'; break;
+    default: body='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" '+st+'/>';
+  }
+  return '<svg viewBox="0 0 100 100" aria-hidden="true">'+body+'</svg>';
+}
+function cellSVG(cell){
+  if(!cell) return "";
+  const n = cell.count||1;
+  let items=[];
+  if(n===1) items=[[50,50]];
+  else if(n===2) items=[[30,50],[70,50]];
+  else if(n===3) items=[[50,28],[28,68],[72,68]];
+  else items=[[30,30],[70,30],[30,70],[70,70]];
+  const r = (cell.r||26)/Math.sqrt(n===1?1:n===2?1.35:n===3?1.9:2.2);
+  let cx = 50, cy = 50;
+  if(cell.pos==="left") cx=32; else if(cell.pos==="right") cx=68;
+  const dx = cx-50, dy = cy-50;
+  return '<svg viewBox="0 0 100 100" aria-hidden="true">'+items.map(p=>
+    shapeSVG(cell.shape||"circle",{cx:p[0]+dx,cy:p[1]+dy,r:r,fill:cell.fill||"solid",rot:cell.rot||0})
+  ).join("")+'</svg>';
+}
+
+/* ========= 图形推理生成器 ========= */
+const SHAPES=["circle","square","triangle","diamond","star"];
+function genFigure(level){
+  const rowRules=[
+    {attr:"shape", fn:r=>({shape:SHAPES[r%SHAPES.length]})},
+    {attr:"count", fn:r=>({count:r+1})},
+    {attr:"fill",  fn:r=>({fill:r%2?"hollow":"solid"})},
+    {attr:"pos",   fn:r=>({pos:["left","center","right"][r]})}
+  ];
+  const colRules=[
+    {attr:"count", fn:c=>({count:c+1})},
+    {attr:"fill",  fn:c=>({fill:c%2?"solid":"hollow"})},
+    {attr:"shape", fn:c=>({shape:SHAPES[(c+2)%SHAPES.length]})},
+    {attr:"pos",   fn:c=>({pos:["left","center","right"][c]})}
+  ];
+  let rr, cr, tries=0;
+  do { rr=pick(rowRules); cr=pick(colRules); tries++; } while(rr.attr===cr.attr && tries<20);
+
+  const baseShape = pick(SHAPES.slice(0,4));
+  const base = {shape:baseShape,count:1,fill:"solid",pos:"center"};
+  const cellAt=(r,c)=>{
+    const cell=Object.assign({},base);
+    if(r<3){ Object.assign(cell, rr.fn(r)); Object.assign(cell, cr.fn(c)); }
+    return cell;
+  };
+  const cells=[];
+  for(let r=0;r<3;r++) for(let c=0;c<3;c++) cells.push(r===2&&c===2?null:cellAt(r,c));
+  const answer=cellAt(2,2);
+
+  // 干扰项：改一个可见属性
+  const muts=[];
+  const shapesPool=SHAPES.filter(s=>s!==answer.shape);
+  muts.push(Object.assign({},answer,{count: answer.count===1?2:answer.count===3?2:answer.count+1}));
+  muts.push(Object.assign({},answer,{fill: answer.fill==="solid"?"hollow":"solid"}));
+  muts.push(Object.assign({},answer,{shape: pick(shapesPool)}));
+  const uniq=[]; const seen=new Set();
+  for(const m of muts){ const k=JSON.stringify(m); if(!seen.has(k)){seen.add(k);uniq.push(m);} }
+  while(uniq.length<3) uniq.push(Object.assign({},answer,{count:rnd(3)+1}));
+
+  const options=shuffle([answer].concat(uniq.slice(0,3)));
+  return {
+    kind:"figure",
+    title:"从下面四个选项里，选出问号处应该填的图形",
+    cells, options, answer: options.indexOf(answer)
+  };
+}
+
+/* ========= 瞬时记忆 ========= */
+function genMemory(level){
+  const g = level>=3?4:3;
+  const total=g*g;
+  const k = Math.min(level>=3?5:4, total-1);
+  const lit=shuffle(Array.from({length:total},(_,i)=>i)).slice(0,k);
+  const q = {kind:"memory", flash:{grid:g, lit}, title:"记住出现的方块位置", question:"刚才亮起的是哪几格？"};
+
+  const mk = (arr)=>{
+    const set=new Set(arr);
+    let s='<div class="gridshow" style="grid-template-columns:repeat('+g+',1fr)">';
+    for(let i=0;i<total;i++) s+='<div class="gcell'+(set.has(i)?" lit":"")+'"></div>';
+    return s+'</div>';
+  };
+  const variants=[lit.slice()];
+  // 少一格
+  variants.push(lit.slice(1));
+  // 多一格（不在原集合中的）
+  const extra = shuffle(Array.from({length:total},(_,i)=>i).filter(i=>!lit.includes(i))).slice(0,1);
+  variants.push(lit.concat(extra));
+  // 换一格
+  variants.push(lit.slice(0,-1).concat(extra));
+
+  const opts=shuffle(variants.slice(0,4));
+  return Object.assign(q,{options:opts.map(mk),rawOptions:opts,answer:opts.findIndex(o=>JSON.stringify(o)===JSON.stringify(lit))});
+}
+
+/* ========= 折纸穿洞 ========= */
+function genPaper(level){
+  const twoFold = level>=2;
+  const N=4;
+  const idx=(r,c)=>r*N+c;
+  const foldV = true;                       // 左右对折
+  const foldH = twoFold;                    // 上下再对折
+  // 折叠后的打孔区域：右半（c>=2），若两折则右下四分之一
+  const minR = foldH?2:0, minC = 2;
+  const spots = shuffle(Array.from({length:4},(_,i)=>i)).slice(0, level>=3?2:1);
+  const punches = spots.map(s=>{
+    const r = minR + Math.floor(s/2), c = minC + (s%2);
+    return [r,c];
+  });
+  // 展开：左右镜像 + 上下镜像
+  const holes=new Set();
+  punches.forEach(([r,c])=>{
+    holes.add(idx(r,c)); holes.add(idx(r,N-1-c));
+    if(foldH){ holes.add(idx(N-1-r,c)); holes.add(idx(N-1-r,N-1-c)); }
+  });
+
+  const mk=(set)=>{
+    let s='<div class="gridshow" style="grid-template-columns:repeat('+N+',1fr);max-width:220px">';
+    for(let r=0;r<N;r++) for(let c=0;c<N;c++){
+      s+='<div class="gcell'+(set.has(idx(r,c))?" lit":"")+'"></div>';
+    }
+    return s+'</div>';
+  };
+  const correct=[...holes].sort((a,b)=>a-b);
+  const pool=(arr)=>{const s=arr.slice(); const i=rnd(s.length-1); s.splice(i,1); return s;};
+  const addExtra=(arr)=>{const cand=Array.from({length:N*N},(_,i)=>i).filter(i=>!arr.includes(i)); return arr.concat([pick(cand)]).sort((a,b)=>a-b);};
+  const variants=[correct, pool(correct), addExtra(correct), pool(correct).length?pool(correct):pool(correct)];
+
+  const opts=shuffle(variants.map(v=>v.slice()));
+  const qStr = foldH
+    ? "把正方形纸先左右对折、再上下对折，然后按图打孔。展开后，纸上是下面哪一种孔位？"
+    : "把正方形纸左右对折，然后按图打孔。展开后，纸上是下面哪一种孔位？";
+  return {
+    kind:"paper", title:"折纸穿洞",
+    question:qStr,
+    foldDiagram: mk(new Set(punches.map(([r,c])=>idx(r,c)))),
+    options:opts.map(v=>mk(new Set(v))),
+    rawOptions:opts,
+    answer: opts.findIndex(v=>JSON.stringify(v)===JSON.stringify(correct))
+  };
+}
+
+/* ========= 文字题库（原创） ========= */
+const WORDS=[
+ // 类比
+ {t:"类比", q:"医生 : 医院 ＝ 老师 : ？", o:["学校","学生","课本","粉笔"], a:0, tip:"医生在医院工作，老师在学校工作。"},
+ {t:"类比", q:"蜜蜂 : 蜂蜜 ＝ 蚕 : ？", o:["桑叶","蚕丝","蚕蛹","飞蛾"], a:1, tip:"蜜蜂产出蜂蜜，蚕产出蚕丝。"},
+ {t:"类比", q:"轮船 : 海洋 ＝ 飞机 : ？", o:["机场","天空","翅膀","飞行员"], a:1, tip:"轮船在海洋中航行，飞机在天空中飞行。"},
+ {t:"类比", q:"温度计 : 温度 ＝ 尺子 : ？", o:["长度","重量","时间","速度"], a:0, tip:"温度计测温度，尺子测长度。"},
+ {t:"类比", q:"树木 : 森林 ＝ 水滴 : ？", o:["河流","大海","雨水","云朵"], a:1, tip:"许多树木组成森林，无数水滴组成大海。"},
+ {t:"类比", q:"书 : 书架 ＝ 画 : ？", o:["画家","画笔","画廊","颜料"], a:2, tip:"书陈列在书架上，画陈列在画廊里。"},
+ {t:"类比", q:"春 : 夏 ＝ 播种 : ？", o:["生长","收获","凋零","严寒"], a:0, tip:"春天播种，夏天生长，前后是承接关系。"},
+ {t:"类比", q:"笔 : 写字 ＝ 刀 : ？", o:["切割","锋利","钢铁","厨房"], a:0, tip:"笔的用途是写字，刀的用途是切割。"},
+ // 归类
+ {t:"归类", q:"下面哪一样不属于水果？", o:["苹果","香蕉","西瓜","土豆"], a:3, tip:"土豆是植物的块茎，属于蔬菜。"},
+ {t:"归类", q:"下面哪一样不属于交通工具？", o:["汽车","地铁","轮船","电梯"], a:3, tip:"电梯在大楼内上下移动，不承担交通运输。"},
+ {t:"归类", q:"下面哪一种不属于哺乳动物？", o:["鲸","蝙蝠","企鹅","海豚"], a:2, tip:"企鹅是鸟类；鲸、蝙蝠、海豚都是哺乳动物。"},
+ {t:"归类", q:"下面哪一项不属于中国古代四大发明？", o:["造纸术","指南针","火药","地动仪"], a:3, tip:"四大发明是造纸术、印刷术、指南针、火药。"},
+ {t:"归类", q:"下面哪一个不是行星？", o:["火星","金星","月球","木星"], a:2, tip:"月球是地球的卫星，不是行星。"},
+ {t:"归类", q:"下面哪一样不属于乐器？", o:["二胡","琵琶","笛子","围棋"], a:3, tip:"围棋是棋类，不是乐器。"},
+ {t:"归类", q:"下面哪一样在常温下不是液体？", o:["水","牛奶","水银","食盐"], a:3, tip:"食盐常温下是固体。"},
+ {t:"归类", q:"下面哪一个不属于传统节日？", o:["春节","清明","重阳","小满"], a:3, tip:"小满是二十四节气之一，不是节日。"},
+ // 数列规律
+ {t:"规律", q:"2，4，8，16，？", o:["20","24","32","64"], a:2, tip:"每一项都是前一项的 2 倍。"},
+ {t:"规律", q:"1，3，6，10，？", o:["13","15","18","20"], a:1, tip:"依次加 2、3、4、5。"},
+ {t:"规律", q:"3，6，12，24，？", o:["36","42","48","60"], a:2, tip:"每一项都是前一项的 2 倍。"},
+ {t:"规律", q:"1，4，9，16，？", o:["20","24","25","36"], a:2, tip:"分别是 1²、2²、3²、4²、5²。"},
+ {t:"规律", q:"2，3，5，8，13，？", o:["18","20","21","26"], a:2, tip:"从第三项起，每项等于前两项之和。"},
+ {t:"规律", q:"100，80，60，40，？", o:["30","20","10","0"], a:1, tip:"每次减 20。"},
+ {t:"规律", q:"1，2，6，24，？", o:["48","96","120","144"], a:2, tip:"依次乘 2、3、4、5。"},
+ {t:"规律", q:"5，10，20，40，？", o:["60","70","80","100"], a:2, tip:"每次乘 2。"},
+ // 事件顺序
+ {t:"顺序", q:"把下面四件事按合理顺序排列：①种子发芽 ②开花 ③结果 ④播种", o:["④①②③","④②①③","①④②③","④①③②"], a:0, tip:"播种→发芽→开花→结果。"},
+ {t:"顺序", q:"把下面四件事按合理顺序排列：①水烧开 ②接水 ③关火 ④倒水", o:["②①③④","①②③④","②③①④","④②①③"], a:0, tip:"接水→烧开→关火→倒水。"},
+ {t:"顺序", q:"把下面四件事按合理顺序排列：①进站 ②买票 ③上车 ④到站", o:["②①③④","①②③④","②③①④","④②①③"], a:0, tip:"买票→进站→上车→到站。"},
+ {t:"顺序", q:"科学研究的一般步骤，正确的是：①提出问题 ②作出假设 ③实验验证 ④得出结论", o:["①②③④","②①③④","①③②④","④①②③"], a:0, tip:"先提出问题，再假设、验证，最后得出结论。"},
+ {t:"顺序", q:"把下面四件事按合理顺序排列：①洗菜 ②切菜 ③炒菜 ④装盘", o:["①②③④","②①③④","①③②④","④①②③"], a:0, tip:"洗→切→炒→装盘。"},
+ {t:"顺序", q:"把下面四件事按合理顺序排列：①复习 ②报名 ③参加考试 ④公布成绩", o:["②①③④","①②③④","②③①④","①②④③"], a:0, tip:"报名→复习→考试→出成绩。"},
+ {t:"顺序", q:"蚕的一生，正确的顺序是：①卵 ②幼虫 ③蛹 ④成虫", o:["①②③④","②①③④","①③②④","④①②③"], a:0, tip:"卵→幼虫→蛹→成虫。"},
+ {t:"顺序", q:"把下面四件事按合理顺序排列：①春天 ②夏天 ③秋天 ④冬天", o:["①②③④","②①③④","①③②④","④①②③"], a:0, tip:"四季顺序：春夏秋冬。"},
+ // 找异类
+ {t:"找异类", q:"下面哪一个与其他三个不同类？", o:["汽车","火车","飞机","自行车"], a:3, tip:"其余三个靠发动机驱动，自行车靠人力。"},
+ {t:"找异类", q:"下面哪一个与其他三个不同类？", o:["苹果","梨","桃","白菜"], a:3, tip:"白菜是蔬菜，其余是水果。"},
+ {t:"找异类", q:"下面哪一个与其他三个不同类？", o:["红色","蓝色","圆形","绿色"], a:2, tip:"圆形是形状，其余是颜色。"},
+ {t:"找异类", q:"下面哪一个与其他三个不同类？", o:["加法","减法","乘法","分数"], a:3, tip:"分数是一种数，其余是运算。"},
+ {t:"找异类", q:"下面哪一个与其他三个不同类？", o:["大米","小麦","玉米","棉花"], a:3, tip:"棉花主要用作纤维，其余是粮食。"},
+ {t:"找异类", q:"下面哪一个与其他三个不同类？", o:["长江","黄河","珠江","太湖"], a:3, tip:"太湖是湖泊，其余是河流。"},
+ {t:"找异类", q:"下面哪一个与其他三个不同类？", o:["眼睛","耳朵","鼻子","心脏"], a:3, tip:"心脏不是感觉器官。"},
+ {t:"找异类", q:"下面哪一个与其他三个不同类？", o:["足球","篮球","乒乓球","象棋"], a:3, tip:"象棋是棋类，其余是球类。"}
+];
+
+/* ========= 出题调度 ========= */
+const MODULES={
+ figure:{name:"图形推理", desc:"找规律，选图形", n:10},
+ memory:{name:"瞬时记忆", desc:"看位置，凭记忆回答", n:8},
+ paper:{name:"折纸穿洞", desc:"想展开后的孔位", n:10},
+ words:{name:"文字推演", desc:"类比·归类·规律·顺序", n:10}
+};
+function buildQuestions(mod, n){
+  const out=[]; const used=new Set();
+  for(let i=0;i<n;i++){
+    if(mod==="words"){
+      let q, guard=0;
+      do { q=pick(WORDS); guard++; } while(used.has(q.q) && guard<80);
+      used.add(q.q);
+      const opts=q.o.map((text,k)=>({text, ok:k===q.a}));
+      const sh=shuffle(opts);
+      out.push({kind:"words", title:q.t, question:q.q, options:sh.map(o=>o.text), answer:sh.findIndex(o=>o.ok), tip:q.tip});
+    } else if(mod==="figure"){
+      const q=genFigure(1+Math.floor(i/4));
+      q.tip="观察行与列分别按什么规律变化。";
+      out.push(q);
+    } else if(mod==="memory"){
+      out.push(genMemory(1+Math.floor(i/3)));
+    } else if(mod==="paper"){
+      const q=genPaper(1+Math.floor(i/4));
+      q.tip="一个孔在折叠状态下会镜像出对应的孔。";
+      out.push(q);
+    }
+  }
+  return out;
+}
+
+/* ========= 状态与存储 ========= */
+const LS="bz_quiz_v1";
+function loadAll(){ try{ return JSON.parse(localStorage.getItem(LS))||{profiles:{}} }catch(e){ return {profiles:{}} } }
+function saveAll(d){ try{ localStorage.setItem(LS, JSON.stringify(d)) }catch(e){} }
+const S={nick:"", mod:null, qs:[], idx:0, answers:[], t0:0, locked:false, timer:null, phase:"home"};
+
+/* ========= 页面：首页 ========= */
+function homeView(){
+  const all=loadAll();
+  const names=Object.keys(all.profiles);
+  const last=names.length? all.profiles[S.nick]||all.profiles[names[names.length-1]] : null;
+  $("#app").innerHTML = `
+    <header><div class="logo">机考</div><div><h1>科学素养 · 机考练习</h1><p>图形推理 · 瞬时记忆 · 折纸穿洞 · 文字推演</p></div></header>
+    <div class="card">
+      <div class="qhead">先写个名字，成绩只存在这台设备上</div>
+      <input type="text" id="nick" placeholder="你的名字" value="${S.nick||""}" maxlength="12">
+      <div style="height:12px"></div>
+      <button class="btn" id="go">开始练习</button>
+    </div>
+    <div class="mods" id="mods">
+      ${Object.entries(MODULES).map(([k,m])=>`
+        <div class="mod" data-k="${k}">
+          <div class="n">${m.name}</div><div class="d">${m.desc}</div>
+          <div class="d" style="color:#9aa4b2">${m.n} 题</div>
+        </div>`).join("")}
+    </div>
+    ${last?`
+    <div class="card" style="margin-top:12px">
+      <div class="qhead">上次成绩 · ${last.nick||""}</div>
+      <table class="stat">
+        ${Object.entries(last.best||{}).map(([k,v])=>`<tr><td>${MODULES[k]?MODULES[k].name:k}</td><td>${v.score}/${v.total}　${v.sec}s</td></tr>`).join("")||'<tr><td>还没有记录</td><td></td></tr>'}
+      </table>
+      <button class="btn ghost sm" id="clear" style="margin-top:10px">清空本机记录</button>
+    </div>`:""}
+    <footer>题目由本地程序生成，仅供练习，与任何学校真实考题无关。<br>建议用手机竖屏作答。</footer>`;
+  $("#go").onclick=()=>{
+    const v=$("#nick").value.trim();
+    if(!v){ $("#nick").focus(); return; }
+    S.nick=v; saveProfile(v); startMod("figure");
+  };
+  document.querySelectorAll(".mod").forEach(el=>{
+    el.onclick=()=>{
+      const v=$("#nick").value.trim();
+      if(!v){ $("#nick").focus(); return; }
+      S.nick=v; saveProfile(v); startMod(el.dataset.k);
+    };
+  });
+  const c=$("#clear"); if(c) c.onclick=()=>{ if(confirm("清空这台设备上的所有成绩记录？")){ localStorage.removeItem(LS); homeView(); } };
+}
+function saveProfile(nick){
+  const all=loadAll();
+  all.profiles[nick]=all.profiles[nick]||{nick, best:{}, history:[]};
+  all.profiles[nick].nick=nick;
+  saveAll(all);
+}
+
+/* ========= 页面：答题 ========= */
+function startMod(mod){
+  S.mod=mod; S.qs=buildQuestions(mod, MODULES[mod].n); S.idx=0; S.answers=[]; S.locked=false; S.t0=Date.now(); S.phase="quiz";
+  quizView();
+}
+function quizView(){
+  const mod=S.mod, q=S.qs[S.idx], total=S.qs.length;
+  const pct=Math.round(S.idx/total*100);
+  const head=`
+    <div class="top"><span>${MODULES[mod].name}</span><span id="clock">00:00</span></div>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+    <div class="qhead">第 ${S.idx+1} / ${total} 题</div>`;
+
+  if(q.kind==="memory" && !q.flashed){
+    // 记忆题：先倒计时 + 闪示
+    $("#app").innerHTML = `<div class="card">${head}<div class="flashcount" id="cnt">3</div><div class="sub">准备</div></div>`;
+    let n=3;
+    const tick=setInterval(()=>{
+      n--;
+      if(n>0){ $("#cnt").textContent=n; }
+      else if(n===0){ $("#cnt").textContent="看！"; }
+      else {
+        clearInterval(tick);
+        $("#cnt").className="hide";
+        const holder=document.createElement("div");
+        holder.innerHTML=renderMemoryFlash(q);
+        $(".card").appendChild(holder);
+        setTimeout(()=>{ holder.remove(); q.flashed=true; quizView(); }, 1400);
+      }
+    },700);
+    startClock();
+    return;
+  }
+
+  let body="";
+  if(q.kind==="figure"){
+    body=`<div class="qhead">${q.title}</div>
+      <div class="matrix">${q.cells.map(c=> c? `<div class="mcell">${cellSVG(c)}</div>` : `<div class="mcell empty">?</div>`).join("")}</div>
+      <div class="opts">${q.options.map((o,i)=>`<button class="opt" data-i="${i}"><span class="k">${LETTER[i]}</span>${cellSVG(o)}</button>`).join("")}</div>`;
+  } else if(q.kind==="memory"){
+    body=`<div class="qtext">${q.question}</div>
+      <div class="opts" style="grid-template-columns:1fr 1fr">${q.options.map((o,i)=>`<button class="opt" data-i="${i}"><span class="k">${LETTER[i]}</span><div style="flex:1">${o}</div></button>`).join("")}</div>`;
+  } else if(q.kind==="paper"){
+    body=`<div class="qtext" style="font-size:15px">${q.question}</div>
+      <div style="display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap">
+        <div><div class="qhead" style="text-align:center">折叠后打孔</div>${q.foldDiagram}</div>
+      </div>
+      <div class="opts">${q.options.map((o,i)=>`<button class="opt" data-i="${i}"><span class="k">${LETTER[i]}</span><div style="flex:1">${o}</div></button>`).join("")}</div>`;
+  } else {
+    body=`<div class="qhead">${q.title}</div><div class="qtext">${q.question}</div>
+      <div class="opts" style="grid-template-columns:1fr">${q.options.map((o,i)=>`<button class="opt" data-i="${i}"><span class="k">${LETTER[i]}</span><span>${o}</span></button>`).join("")}</div>`;
+  }
+
+  $("#app").innerHTML=`<div class="card">${head}${body}
+    <div class="msg" id="msg"></div>
+    <div style="height:12px"></div>
+    <button class="btn hide" id="next">下一题</button>
+  </div>`;
+
+  document.querySelectorAll(".opt").forEach(btn=>{
+    btn.onclick=()=>answer(parseInt(btn.dataset.i,10));
+  });
+  startClock();
+}
+
+function renderMemoryFlash(q){
+  const g=q.flash.grid, lit=new Set(q.flash.lit);
+  let s='<div class="gridshow" style="grid-template-columns:repeat('+g+',1fr)">';
+  for(let i=0;i<g*g;i++) s+='<div class="gcell'+(lit.has(i)?" lit":"")+'"></div>';
+  return s+'</div>';
+}
+
+function answer(i){
+  if(S.locked) return;
+  S.locked=true;
+  const q=S.qs[S.idx];
+  const ok = i===q.answer;
+  S.answers.push({i, ok});
+  document.querySelectorAll(".opt").forEach((el,k)=>{
+    el.disabled=true;
+    if(k===q.answer) el.classList.add("right");
+    if(k===i && !ok) el.classList.add("wrong");
+    const kk=el.querySelector(".k");
+    if(k===q.answer) kk.classList.add("right");
+    if(k===i && !ok) kk.classList.add("wrong");
+  });
+  const msg=$("#msg");
+  msg.className="msg show "+(ok?"ok":"bad");
+  msg.innerHTML = (ok?"正确":"答错，正确答案是 "+LETTER[q.answer]) + (q.tip? '　· '+q.tip : '');
+  const nb=$("#next"); nb.classList.remove("hide");
+  nb.onclick=()=>{
+    S.idx++; S.locked=false;
+    if(S.idx>=S.qs.length) return resultView();
+    quizView();
+  };
+}
+
+/* 计时 */
+function startClock(){
+  clearInterval(S.timer);
+  S.timer=setInterval(()=>{
+    const el=$("#clock"); if(!el) return;
+    const s=Math.floor((Date.now()-S.t0)/1000);
+    el.textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+  },500);
+}
+
+/* ========= 页面：成绩 ========= */
+function resultView(){
+  clearInterval(S.timer);
+  const total=S.qs.length, score=S.answers.filter(a=>a.ok).length;
+  const sec=Math.round((Date.now()-S.t0)/1000);
+  const pct=Math.round(score/total*100);
+  const all=loadAll(); const p=all.profiles[S.nick]||(all.profiles[S.nick]={nick:S.nick,best:{},history:[]});
+  p.history.push({mod:S.mod,score,total,sec,at:new Date().toISOString()});
+  p.best=p.best||{};
+  const b=p.best[S.mod];
+  if(!b || score>b.score || (score===b.score && sec<b.sec)) p.best[S.mod]={score,total,sec};
+  saveAll(all);
+
+  const wrong=S.qs.map((q,i)=>({q,a:S.answers[i]})).filter(x=>x.a && !x.a.ok);
+  $("#app").innerHTML=`
+    <div class="card">
+      <div class="qhead">${MODULES[S.mod].name} · 本轮成绩</div>
+      <div class="big">${score}<span style="font-size:18px;color:#9aa4b2"> / ${total}</span></div>
+      <div class="sub">正确率 ${pct}%　用时 ${Math.floor(sec/60)}分${sec%60}秒</div>
+      <div style="height:16px"></div>
+      <button class="btn" id="again">再练一次</button>
+      <div style="height:8px"></div>
+      <button class="btn ghost" id="back">换个模块</button>
+    </div>
+    ${wrong.length?`<div class="card"><div class="qhead">错题回顾（${wrong.length}）</div>
+      ${wrong.map(w=>`<div class="wrongitem"><div class="tag">${MODULES[S.mod].name}</div><div>${w.q.question||w.q.title}</div></div>`).join("")}
+    </div>`:`<div class="card"><div class="sub">这一轮全对。</div></div>`}
+    <div class="card"><div class="qhead">历史最好成绩</div>
+      <table class="stat">${Object.entries(p.best).map(([k,v])=>`<tr><td>${MODULES[k].name}</td><td>${v.score}/${v.total}　${v.sec}s</td></tr>`).join("")}</table>
+    </div>
+    <footer>成绩保存在本机浏览器中，换设备或清缓存会丢失。</footer>`;
+  $("#again").onclick=()=>startMod(S.mod);
+  $("#back").onclick=()=>{ S.phase="home"; homeView(); };
+}
+
+/* 启动 */
+homeView();
+</script>
+</body>
+</html>
